@@ -26,3 +26,9 @@ The skills for BAs to write FRD/PRD/Use story/Draw Diagrams and etc， below is 
    
 6) please create a new file ending with .mmd including all above code details, make sure you saved this file
 7) Install Plugin : Markdown Preview in VSCode and press hot key " Ctrl+Shift+P" and input " Mermaid: Preview Diagram", then you can preview the diagram.
+
+========================================================================================================================
+Tips:
+Install Plugin : Markdown Preview Mermaid Support, file ending with .mmd, press Ctrl+Shift+P and select Mermaid: Preview Diagram
+Install Plugin : PlantUML, file ending with.puml, PlantUML: press Ctrl+Shift+P and select Preview Current Diagram
+
