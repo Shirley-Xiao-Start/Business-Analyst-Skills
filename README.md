@@ -23,5 +23,6 @@ The skills for BAs to write FRD/PRD/Use story/Draw Diagrams and etc， below is 
     class D,H ok
     class E,F,G err
     class A,B,I neutral
-   6) please create a new file ending with .mmd including all above code details, make sure you saved this file
-   7) Install Plugin : Markdown Preview in VSCode and press hot key " Ctrl+Shift+P" and input " Mermaid: Preview Diagram", then you can preview the diagram.
+   
+6) please create a new file ending with .mmd including all above code details, make sure you saved this file
+7) Install Plugin : Markdown Preview in VSCode and press hot key " Ctrl+Shift+P" and input " Mermaid: Preview Diagram", then you can preview the diagram.
