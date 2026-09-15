@@ -1,148 +1,129 @@
 ---
-name: plantuml-sequence-diagrammer
-description: Turns a natural-language account of events (who lent money to whom, how a client interacts with a server, how request-response-timeout flows) or a code file into a PlantUML sequence diagram and a .puml file. It also teaches PlantUML from scratch, covers advanced features (alt/opt/loop/group/skinparam/theme), walks through installing Java + Graphviz + the VS Code / IntelliJ / Eclipse extensions on Windows, and troubleshoots rendering failures. Use this whenever the user says "draw a sequence diagram", "sequence diagram", "PlantUML", "give me a .puml", "turn this business process into a sequence diagram", "generate a call sequence diagram from this file", or "PlantUML won't render". Typical requests include "draw a sequence diagram for this call flow", "turn this description into a .puml", and "sequence diagram for client-server timeout handling".
+name: mermaid-diagrammer
+description: Draws flowcharts, state diagrams and sequence diagrams with Mermaid.js and produces render-ready .mmd files. It also teaches Mermaid syntax, sets up the VS Code Mermaid extensions, and troubleshoots rendering errors. Use this whenever the user says "draw a flowchart", "flowchart", "Mermaid", "visualise this process", "give me a .mmd file", "draw a swimlane diagram / state machine", "help me configure the Mermaid extension", or "why won't my Mermaid render". Typical requests include "draw a diagram for this process", "draw a flowchart for the approval flow", and "give me a .mmd file for this workflow".
 ---
 
-# PlantUML Sequence Diagrammer
+# Mermaid Diagrammer
 
-A sequence diagram answers exactly one question: **in what order do messages travel, and between whom**. PlantUML describes it in text, so the diagram goes into Git and can be reviewed.
+The point of Mermaid is **diagrams as code**. The diagram lives in a text file, so it goes into Git, it can be reviewed, and it can be changed -- far better than a drag-and-drop image. The core deliverable is a single `.mmd` file.
 
 ## Decide the mode first
 
-- **Mode A: natural language -> sequence diagram.** The user told a business story (a loan, an order, an approval flow). Default mode.
-- **Mode B: file -> sequence diagram.** The user gave a file path or a codebase and wants the call sequence reconstructed. Read the files first, then draw.
-- **Mode C: teaching mode.** The user says "I'm new to this", "teach me", "step by step". Follow the outline below; do not just drop a diagram.
+**Diagram mode** (default) -- the user described a process, system or state and wants a diagram. Produce the `.mmd` directly.
 
-## Universal output requirements
+**Teaching mode** -- the user says "I'm new to this", "teach me", "step by step", "from scratch", "I want to learn Mermaid". Do not just drop a diagram. Follow the outline below: get a minimal runnable example working first, then layer on features, explaining at every step what the line is drawing.
 
-Whichever mode is in play, the `.puml` you produce must satisfy these. They are what make a diagram *understandable* rather than merely *renderable*:
+When unsure, go with diagram mode -- if the user really wants to learn, they will ask follow-up questions once they see the result.
 
-- The file **must** start with `@startuml` and end with `@enduml`. This is the most common error, and the most commonly forgotten.
-- Put a `title` at the top stating which business process the diagram describes.
-- Declare participants as `participant <short> as "<display>"`. **Always quote a display name containing spaces or special characters**, otherwise PlantUML parses them as syntax.
-- The **declaration order is the left-to-right order of the lifelines**. Declare them in the order the events occur, so the diagram reads naturally.
-- Turn on `autonumber`. In a review you can then say "step 7" instead of describing a position.
-- Use `== Stage name ==` to divide the timeline, cutting long flows into readable segments.
-- `->` is a request; `-->` is a return / response. Mixing them up leaves the reader unable to tell a call from a reply.
-- Break long text with `\n`; anything inside quotes is fine.
-- File name: `<index>_<topic>.puml`, for example `01_fund_flow.puml`, so files sort in reading order.
+## Diagram mode
 
-## Mode A: natural language -> sequence diagram
+### Output conventions
 
-### Extract four things
+- File name: `<topic>.mmd`, for example `login-flow.mmd`
+- File contents: **the Mermaid code and nothing else** -- no ```mermaid fence, no filename comment line. The `.mmd` extension already declares the language.
+- The first line must be a diagram-type declaration (`flowchart TD` / `sequenceDiagram` / `stateDiagram-v2`)
+- Write labels in any language directly, but **whenever a label contains a space, bracket, comma, slash or colon, it must be quoted**: `A["Validate credentials (v2)"]`. This is the single most common source of syntax errors.
 
-1. **Participants**: which parties are in the story? Keep "roles" and "systems" apart -- `Customer` is a person, `Core System` is a system, and a sequence diagram should not conflate them.
-2. **Messages**: every "did something" is a message; work out the direction (A to B, or B to A).
-3. **Time progression**: mark time points with `== ==` or `...`. A "two months later" in the story must land on the diagram, or the temporal relationship is lost.
-4. **Exceptions and alternative paths**: could it fail, time out, be rejected? Draw them with `alt` / `opt`.
+### Choosing the diagram type
 
-### Example: loan flow
+Choosing the wrong type hurts more than a syntax error -- a syntax error gets reported by the renderer, whereas a wrong diagram type is only discovered once the user looks at the result.
 
-Input: "Tim borrowed $100 from Bob. Tim lent $80 of it to Alice and $20 to Mary, for 2 months at 5% per month. Two months later Tim returned $100 to Bob."
+- **Process / decision / branching** -> `flowchart TD` (top-down) or `LR` (left-right; good for long chains)
+- **Back-and-forth interaction between two parties** -> `sequenceDiagram`
+- **State transitions of a single object** -> `stateDiagram-v2`
+- **Who owns what at which stage (swimlanes)** -> `flowchart` + `subgraph`
+- **Phases laid out on a timeline** -> `gantt`
 
-```plantuml
-@startuml
-title Loan fund flow
-autonumber
+### Flowchart skeleton (with a loop)
 
-actor "Bob" as Bob
-actor "Tim" as Tim
-actor "Alice" as Alice
-actor "Mary" as Mary
+Mermaid flowcharts have **no native loop syntax**. Loops are expressed with a **back edge** -- an arrow pointing back upstream, which the renderer lays out as a cycle. Do not go looking for a `loop` keyword; there is not one.
 
-== T0 · Borrowing in ==
-Tim -> Bob : Borrow $100
-Bob --> Tim : Deliver principal $100
+```mermaid
+flowchart TD
+    A([Start]) --> B[/Enter username/]
+    B --> C[/Enter password/]
+    C --> D{Validate credentials}
+    D -- Pass --> E[Issue session token]
+    E --> F[Redirect to home page]
+    D -- Fail --> G{Consecutive failures >= 5?}
+    G -- No --> H[Show: email or password is incorrect]
+    H -.Retry.-> C
+    G -- Yes --> I[Lock account for 30 minutes]
+    F --> Z([End])
+    I --> Z
 
-== T0 · On-lending ==
-Tim -> Alice : Lend $80, term 2 months, 5% per month
-Alice --> Tim : Confirm: repay principal $80 + interest $8 at maturity
-Tim -> Mary : Lend $20, term 2 months, 5% per month
-Mary --> Tim : Confirm: repay principal $20 + interest $2 at maturity
-
-== T0 + 2 months · Collection and settlement ==
-Alice --> Tim : Repay $88 (principal $80 + interest $8)
-Mary --> Tim : Repay $22 (principal $20 + interest $2)
-Tim -> Bob : Repay $100
-
-note over Tim
-  Tim's net gain = (88 + 22) - 100 = $10
-  Interest basis: simple interest, 5%/month x 2 months
-end note
-
-@enduml
+    classDef ok fill:#d1fae5,stroke:#059669,color:#064e3b
+    classDef err fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    class E,F ok
+    class G,H,I err
 ```
 
-Two things are happening here. **The interest amounts implied by the source are calculated and placed on the messages** -- the source gave only a rate, leaving the reader to do the arithmetic, and the diagram is not actually clear until the amounts are on the page. And **a note records the interest-basis assumption**. Under compound interest the amounts would be $88.20 and $22.05, which is exactly what the user must confirm; do not silently pick one.
+Common shapes:
 
-### Writing common branches
+| Syntax | Renders as | Best for |
+|---|---|---|
+| `A[text]` | rectangle | ordinary step |
+| `A([text])` | rounded capsule | start / end |
+| `A{text}` | diamond | decision |
+| `A[/text/]` | parallelogram | input / output |
+| `A[(text)]` | cylinder | data store |
+| `A[[text]]` | double border | subprocess |
 
-```plantuml
-alt Validation passed
-    Server --> Client : 200 OK
-else Validation failed
-    Server --> Client : 401 Unauthorized
-end
+### Advanced features at a glance
 
-opt No response within 3 seconds
-    Client -> Client : Raise timeout notice
-end
+- **Back edge for loops**: `H -.Retry.-> C`. A dashed arrow separates the normal flow from the return flow, which reads more easily.
+- **Grouping (swimlanes)**: `subgraph Frontend` ... `end`. Note that `end` is reserved and **cannot be used as a node ID**.
+- **Styling**: `classDef` defines a style class and `class nodeId className` applies it in bulk. Far easier to maintain than per-node `style` statements.
+- **Link styling**: `linkStyle 3 stroke:#dc2626,stroke-width:2px` -- the argument is the **index** of the link, counting from 0. Re-check the indices whenever the diagram changes; this is an easy trap.
+- **Comments**: `%% this is a comment`. Document the business meaning of each branch for whoever comes next.
+- **Line breaks inside a node**: use `<br/>`, not `\n`.
 
-loop Retry up to 3 times
-    Client -> Server : Resend request
-end
+### When one concept has several valid drawings
 
-group Idempotent handling
-    Server -> Server : Deduplicate by requestId
-end
-```
+Lay them out and let the user choose, with the trade-offs stated:
 
-Which to choose: `alt` is an exclusive branch, `opt` an optional add-on, `loop` a loop, and `group` is purely visual grouping that changes no semantics. Do not use `group` as a condition.
+- For the same "user places an order", `flowchart` emphasises **steps and branches**, `sequenceDiagram` emphasises **message round-trips between parties**, and `stateDiagram-v2` emphasises **order-state transitions**. They carry different information, and the wrong choice hides what matters most.
+- `flowchart LR` suits long chains, but beyond roughly 12 nodes it stretches very wide; switch to `TD` or split it into two diagrams.
 
-## Mode B: file -> sequence diagram
+## Teaching mode
 
-1. **Locate the entry point first.** Find `main`, route registration, `@RestController` / view functions, handlers -- a sequence diagram always starts at an external trigger.
-2. **Read down the call chain.** Stop at downstream services / repositories / external interfaces. Do not read all the way to the bottom; stop at **boundaries that carry business meaning** (database, third-party API, message queue).
-3. **Mark synchronous versus asynchronous.** Use `->` for synchronous calls; asynchronous messages can use `->>` with an explanatory note. Draw timeouts and retries with `alt` / `loop`.
-4. **One diagram, one main path.** If you find five or six unrelated branches, split them into several `.puml` files ordered by an index prefix.
+Work through in this order, with a runnable minimal snippet at every step:
 
-When reading files, read only the key nodes. Do not load an entire repository into context -- it is slow and it blurs the focus.
+1. **Get the first diagram running** -- three lines, two nodes and one edge. Show them how simple it is.
+2. **Shapes and semantics** -- the shape table above.
+3. **Branches and decisions** -- diamonds plus labelled arrows.
+4. **Loops** -- clarify emphatically that there is no `loop` keyword and a back edge is used instead. This is where most people get stuck.
+5. **Grouping and styling** -- subgraph, classDef.
+6. **Other diagram types** -- cover `sequenceDiagram` and `stateDiagram-v2` briefly, and say when to switch.
+7. **Getting it running in VS Code** -- see the next section.
 
-## Mode C: teaching mode
+## VS Code setup
 
-Work through in order, giving runnable code and a visible render at each step:
+To VS Code, `.mmd` / `.mermaid` are **plain text** -- unrecognised and unrendered by default. An extension is required:
 
-1. **Minimal runnable diagram** -- `@startuml` + one `participant` + one message + `@enduml`
-2. **Participant types** -- `actor` (a person), `participant` (default), `boundary` / `control` / `entity` (fits layered architectures)
-3. **Message types** -- `->`, `-->`, `->>` (async), `-x` (lost), and the reverse-direction forms
-4. **Lifelines and activation** -- `activate` / `deactivate`, or the `++` / `--` shorthand, to show who is working during a period
-5. **Notes** -- `note left/right/over`, used for business rules
-6. **Grouping and branches** -- `alt` / `opt` / `loop` / `group` / `par`
-7. **Styling and themes** -- `skinparam` and `!theme`
-8. **Time progression** -- the difference between `== ==` and `...`
+- **Previewing / editing standalone `.mmd` files** -> install `Mermaid Editor` (extension ID `tomoyukim.vscode-mermaid-editor`). Supports editing, live preview and PNG / SVG export. This is the workhorse for the `.mmd` case.
+- **Rendering ```mermaid blocks inside `.md`** -> install `Markdown Preview Mermaid Support` (extension ID `bierner.markdown-mermaid`). After installing, VS Code's built-in Markdown preview (`Ctrl+Shift+V`) renders the diagrams.
 
-Call out the three beginner traps: **reversed arrow direction** (`A <- B` and `A --> B` mean different things), **a missing `@enduml`**, and **unquoted participant names containing spaces**.
+The two solve different problems and are often needed **together**.
 
-## Windows installation
+One warning: the marketplace may hold several extensions with the same or a similar name. Check the extension ID and the download count above before installing, or you will install the wrong one.
 
-1. **Java** -- install JDK 17 or later (Temurin or Oracle, either is fine), then confirm with `java -version`.
-2. **Graphviz** -- required when PlantUML draws non-sequence diagrams (class, component). Add its `bin` directory to `PATH` and confirm with `dot -V`. **Do not install it under a path containing spaces**; spaces cause a pile of trouble.
-3. **VS Code** -- install `PlantUML` (extension ID `jebbs.plantuml`), open a `.puml` file and press `Alt+D` to preview. If you see `Dot executable does not exist`, Graphviz is missing or not on `PATH`: set `plantuml.dotPath` in the settings, or add `-Dplantuml.graphviz.dot=<full path to dot>` to `plantuml.commandArgs`.
-4. **IntelliJ IDEA** -- install the `PlantUML integration` plugin; Graphviz must be configured first.
-5. **Eclipse** -- install the PlantUML Eclipse Plugin (which carries its own Graphviz dependency).
-6. **Zero-install fallback** -- the online editor <https://www.plantuml.com/plantuml/uml/> renders whatever you paste into it.
+**Fallback with no extension at all**: paste the code into [mermaid.live](https://mermaid.live). It previews and exports just as well.
 
 ## Troubleshooting checklist
 
 | Symptom | Cause and fix |
 |---|---|
-| `Dot executable does not exist` | Graphviz not installed / not on `PATH` / installed under a path containing spaces. Point the plugin settings explicitly at `dot` |
-| Non-Latin text renders as boxes | Add `skinparam defaultFontName "Microsoft YaHei"` (or `"SimSun"`) and raise `skinparam defaultFontSize` |
-| `Syntax Error?` | Missing `@enduml`; an unquoted participant name containing spaces; invalid arrow syntax (`<--` is easily confused with `-->`) |
-| Image is clipped, content runs off the edge | Add `scale max 2000 width`, or adjust `plantuml.previewAutoUpdate` / preview panel zoom in VS Code |
-| Large diagrams render extremely slowly | Add `!pragma layout smetana` (the Smetana layout engine, faster on large diagrams), or tighten styling with `skinparam style strictuml` |
-| Preview does not refresh after an edit | The VS Code PlantUML preview lags by default; reopen it with `Alt+D`, or adjust `plantuml.previewAutoUpdate` |
+| `Parse error` pointing at a label | The label contains `()` `,` `/` `:` without quotes -> change it to `A["text (note)"]` |
+| Error about a node ID | The ID contains a space or a hyphen. IDs may only contain alphanumerics and underscores; move the display text into `[]` |
+| Error mentioning `end` | `end` is reserved for `subgraph` and cannot be a node ID. Use `End1` |
+| Tangled diagram with crossing arrows | Inconsistent layout direction. Settle on `TD` or `LR`; if there are too many nodes, split the diagram or use `subgraph` |
+| Styles have no effect | `classDef` sits after the `class` statements that use it, or the `linkStyle` index is miscounted (it counts from 0) |
+| `.mmd` opens as plain text with no diagram | No extension supporting `.mmd` is installed; see the section above |
+| Non-Latin characters render as boxes | Usually a missing font when exporting to an image. Export as SVG instead, or export from `mermaid.live` |
 
 ## Last step
 
-If the user gave only a topic ("draw a sequence diagram of a client and a server") with no detail, **do not invent interface names and fields**. Ask three things first: which participants there are, the message order on the happy path, and whether timeout / failure / retry branches are needed. Getting those answers first is far faster than drawing a version and then reworking it.
+If the user gave only a topic and no process detail, **do not invent business logic**. An invented diagram looks professional while every business rule inside it is wrong, and the user has to correct it line by line -- more work than starting clean.
+
+The right approach: ask only for what is missing and essential -- "who are the parties", "what are the decision points and their branches", "should the exception and failure paths be drawn in". If there is enough information, draw the diagram, then list the inferences you made underneath and ask the user to correct them.
