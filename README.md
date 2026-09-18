@@ -1,34 +1,21 @@
-# Business-Analyst-Skills
-The skills for BAs to write FRD/PRD/Use story/Draw Diagrams and etc， below is how to use it in VSCode.
-1) Install ClaudeCode in VSCode
-2) Dowload all BA skills to ClaudeCode skill folder, e.g C:\***\Claudecode\.claude\skills
-3) direct to /mermaid-diagrammer or other skills in ClaudeCode chatbox
-4) input: please draw a diagram for a login process
-5) it will list the code for the diagram as below:
-   flowchart TD
-    A([Start]) --> B["Enter username & password"]
-    B --> C{"Validate credentials"}
-    C -- Valid --> D["Issue session token"]
-    C -- Invalid --> E["Show: incorrect username or password"]
-    E --> F{"Consecutive failures >= 5?"}
-    F -- No --> B
-    F -- Yes --> G["Lock account for 30 minutes"]
-    D --> H["Redirect to home page"]
-    G --> I([End])
-    H --> I
+This skill suite empowers Business Analysts to author FRDs/PRDs/user stories and generate diagrams efficiently. 
+Below is a step-by-step guide for usage within VS Code.
 
-    classDef ok fill:#d1fae5,stroke:#059669,color:#064e3b
-    classDef err fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
-    classDef neutral fill:#f3f4f6,stroke:#6b7280,color:#1f2937
-    class D,H ok
-    class E,F,G err
-    class A,B,I neutral
-   
-6) please create a new file ending with .mmd including all above code details, make sure you saved this file
-7) Install Plugin : Markdown Preview in VSCode and press hot key " Ctrl+Shift+P" and input " Mermaid: Preview Diagram", then you can preview the diagram.
+### How to Use
 
-========================================================================================================================
-Tips:
-Install Plugin : Markdown Preview Mermaid Support, file ending with .mmd, press Ctrl+Shift+P and select Mermaid: Preview Diagram
-Install Plugin : PlantUML, file ending with.puml, PlantUML: press Ctrl+Shift+P and select Preview Current Diagram
+1. Install the ClaudeCode extension in VS Code.
+2. Download all BA skill files and place them into your ClaudeCode skills folder, for example: `C:***\Claudecode.claude\skills`
+3. In the ClaudeCode chat box, navigate to `/mermaid-diagrammer` or any other available skill.
+4. Enter your prompt, for example:
+> please draw a diagram for a login process
+5. Create a new file with the `.mmd` extension, paste all the generated code and save the file.
+6. Install the **Markdown Preview Mermaid Support** plugin in VS Code. Press `Ctrl+Shift+P`, search and select `Mermaid: Preview Diagram` to view your diagram.
 
+### Quick Tips
+
+- For Mermaid diagrams:
+Plugin: *Markdown Preview Mermaid Support* | File suffix: `.mmd`
+Shortcut: `Ctrl+Shift+P` → `Mermaid: Preview Diagram`
+- For PlantUML sequence diagrams:
+Plugin: *PlantUML* | File suffix: `.puml`
+Shortcut: `Ctrl+Shift+P` → `Preview Current Diagram`
